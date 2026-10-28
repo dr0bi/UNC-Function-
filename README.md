@@ -33,3 +33,11 @@ This project does not include Roblox-client injection, anti-cheat bypasses, prot
 ## Build
 
 Build instructions will be added after the Luau dependency and toolchain are pinned.
+
+
+## Added standalone C++ modules
+
+- `functions/filesystem/filesystem.h/.cpp` — workspace-root-confined file and directory operations.
+- `functions/console/Console.h/.cpp` — host-agnostic log levels routed to a host-provided sink; no UI is included.
+
+These modules require C++17 or newer. Each module is standalone and can be added to a host build individually.
