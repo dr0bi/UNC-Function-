@@ -1,44 +1,45 @@
 # UNC Compatibility Runtime
 
-A Luau compatibility layer for **owned, local runtimes and test harnesses**.
+A modular C++ compatibility layer for **owned, local runtimes and test harnesses**.
 
-## Scope
+## Scope and safety boundary
 
-Implement and test documented utility APIs against a pinned Luau build. Platform-specific behavior is provided through explicit host interfaces so the same API can run in a local harness without depending on a live game client.
+This repository provides utility APIs and host interfaces for local software you control. It does **not** implement Roblox-client injection, anti-cheat bypass, protection evasion, or exploit execution against live Roblox experiences. Functions that depend on Roblox internals are not falsely reported as implemented.
 
-This project does not include Roblox-client injection, anti-cheat bypasses, protection evasion, or exploit execution against live Roblox experiences.
+## Modules
 
-## Architecture
+Every implemented module is split into a header and source file.
 
-- `runtime/` — Luau state creation, lifecycle, and host interface.
-- `api/` — grouped compatibility modules (debug, filesystem, scripts, instances, metatable, cache, HTTP/WebSocket, Drawing).
-- `tests/` — behavior and compatibility tests.
-- `docs/` — API support matrix and known differences.
+| Module | Status | Notes |
+|---|---|---|
+| `filesystem` | Implemented, not yet verified by CI | Operations confined to a configured workspace root |
+| `console` | Implemented, not yet verified by CI | Host-provided logging sink; no UI |
+| `crypt` | Partial | Base64 encode/decode only; not encryption |
+| `cache` | Implemented, not yet verified by CI | Thread-safe local string key/value cache |
+| `misc` | Partial | Portable string helpers |
+| `drawing` | Host interface | Drawing primitives are forwarded to a host-provided canvas |
+| `websocket` | Host interface | Transport is injected by the host; this repository does not ship a network backend |
+| `input` | Host interface | Queries are supplied by the host |
+
+## Not implemented
+
+The following categories require a compatible runtime/engine adapter and are not implemented by these standalone modules: Roblox Instances and services, Luau script execution/bytecode access, debug introspection and mutation, metatable/function hooking, garbage-collector inspection, thread-identity manipulation, exploit-specific environment/closure functions, and anti-cheat/protection bypasses.
+
+## Build and test
+
+Requires CMake 3.16+ and a C++17 compiler.
+
+```sh
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+The test target currently covers cache operations, string helpers, and Base64 round-tripping/malformed input. The repository has not yet run CI, so a green build/test result is not claimed.
 
 ## Implementation rules
 
-1. Every exported function must have a test and a documented support status.
-2. Unsupported host-dependent behavior must return a clear error, never a fake success.
-3. Filesystem and network access are injected through host interfaces and can be disabled in tests.
-4. Keep API groups modular; don't expose a function until its behavior is implemented.
-
-## Status
-
-- [x] Repository initialized
-- [ ] Pin Luau version and establish build
-- [ ] Add runtime harness and test runner
-- [ ] Implement API groups incrementally
-- [ ] Publish compatibility matrix
-
-## Build
-
-Build instructions will be added after the Luau dependency and toolchain are pinned.
-
-
-## Added standalone C++ modules
-
-- `functions/filesystem/filesystem.h/.cpp` — workspace-root-confined file and directory operations.
-- `functions/console/Console.h/.cpp` — host-agnostic log levels routed to a host-provided sink; no UI is included.
-- `functions/crypt/Crypt.h/.cpp` — portable Base64 encode/decode helpers with malformed-input checks.
-
-These modules require C++17 or newer. Each module is standalone and can be added to a host build individually.
+1. Export only behavior that is implemented and documented.
+2. Host-dependent behavior must use explicit interfaces and report unavailable behavior honestly.
+3. File and network access should be constrained by the host and test configuration.
+4. Add tests for each API before marking it verified.
