@@ -39,5 +39,6 @@ Build instructions will be added after the Luau dependency and toolchain are pin
 
 - `functions/filesystem/filesystem.h/.cpp` — workspace-root-confined file and directory operations.
 - `functions/console/Console.h/.cpp` — host-agnostic log levels routed to a host-provided sink; no UI is included.
+- `functions/crypt/Crypt.h/.cpp` — portable Base64 encode/decode helpers with malformed-input checks.
 
 These modules require C++17 or newer. Each module is standalone and can be added to a host build individually.
